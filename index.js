@@ -1,23 +1,30 @@
-import { createStore, applyMiddleware } from "redux";
+import { createStore, applyMiddleware, combineReducers } from "redux";
 import logger from "redux-logger";
 import axios from "axios";
 import thunk from "redux-thunk";
 
-const INCREMENT = "INCREMENT";
+const INCREMENT = "ACCOUNT/INCREMENT";
 
-const INCREMENTBYAMOUNT = "INCREMENTBYAMOUNT";
+const INCREMENTBYAMOUNT = "ACCOUNT/INCREMENTBYAMOUNT";
 
-const INIT = "INIT";
+const INIT = "ACCOUNT/INIT";
+
+const INCREMENTBONUS = "BONUS/INCREMENT";
 
 const store = createStore(
-  reducer,
+  // reducer,
+  combineReducers({
+    account: accountReducer,
+    bonus: bonusReducer,
+  }),
+
   applyMiddleware(logger.default, thunk.default)
 );
 
 const history = [];
 
 //reducer
-function reducer(state = { amount: 1 }, action) {
+function accountReducer(state = { amount: 1 }, action) {
   // if (action.type === INCREMENT) {
   //   //immutability
   //   return {
@@ -42,6 +49,19 @@ function reducer(state = { amount: 1 }, action) {
     case INCREMENTBYAMOUNT:
       return { amount: state.amount + action.payload };
 
+    default:
+      return state;
+  }
+}
+
+function bonusReducer(state = { points: 0 }, action) {
+  switch (action.type) {
+    case INCREMENTBONUS:
+      return { points: state.points + 1 };
+    case INCREMENTBYAMOUNT:
+      if (action.payload >= 100) {
+        return { points: state.points + 2 };
+      }
     default:
       return state;
   }
@@ -72,6 +92,10 @@ function initUser(value) {
   return { type: INIT, payload: value };
 }
 
+function incrementBonus() {
+  return { type: INCREMENTBONUS };
+}
+
 function getUser(id) {
   return async (dispatch, getState) => {
     const { data } = await axios.get(`http://localhost:3000/accounts/${id}`);
@@ -86,8 +110,9 @@ function getUser(id) {
 setTimeout(() => {
   //   store.dispatch({ type: "incrementByAmount", payload: 10 });
   // store.dispatch(increment());
-  // store.dispatch(incrementByAmount(10));
-  store.dispatch(getUser(4));
+  // store.dispatch(incrementByAmount(200));
+  // store.dispatch(getUser(4));
+  store.dispatch(incrementBonus());
 }, 2000);
 // console.log(store.getState());
 
